@@ -16,5 +16,6 @@ func main() {
 
 func doAnotherThing(float float32) string {
 	fmt.Println("Thing I wanna do")
+	fmt.Println("Thing I wanna do 2")
 	return fmt.Sprintf("%f - is the %x", float, reflect.TypeOf(float))
 }
