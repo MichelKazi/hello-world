@@ -40,7 +40,7 @@ func main() {
 			}
 		}
 		if !found {
-			c.JSON(404, "Nothing found")
+			c.JSON(404, gin.H{"Error": "Nothing found"})
 		}
 	})
 
