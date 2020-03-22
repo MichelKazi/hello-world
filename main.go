@@ -2,68 +2,58 @@ package main
 
 import (
 	"fmt"
-	"reflect"
+
+	"github.com/gin-gonic/gin"
 )
 
-var otherThing float32 = -32.34
-
-type Thing interface {
-	AMethod(o string) string
-	BMethod(i int) int
+type Thing struct {
+	Person       string
+	Age          int
+	FavoriteFood string
 }
 
-type AThing struct {
-	AnotherVal int
-}
-
-type BThing struct {
-	Val int
-}
-
-func (a AThing) AMethod(val string) string {
-	return fmt.Sprintf("%s AThing", val)
-}
-
-func (b BThing) AMethod(val string) string {
-	return fmt.Sprintf("%s Bthing", val)
-}
-
-func (a AThing) BMethod(i int) int {
-	return 1 * i
-}
-
-func (b BThing) BMethod(i int) int {
-	return 2 * i
-}
-
-func init() {
+type Database struct {
+	People []Thing
 }
 
 func main() {
-	a := AThing{}
-	b := BThing{}
-	MethodThatTakesInterface(a)
-	MethodThatTakesInterface(b)
-}
+	db := Database{}
+	db.People = append(db.People, Thing{Person: "Hillary", Age: 27, FavoriteFood: "Toads"})
+	db.People = append(db.People, Thing{Person: "Jeffry", Age: 37, FavoriteFood: "Snickers"})
+	db.People = append(db.People, Thing{Person: "Tyler", Age: 25, FavoriteFood: "Flies"})
 
-func doAnotherThing(float float32) string {
-	return fmt.Sprintf("%f - is the %x", float, reflect.TypeOf(float))
-}
+	r := gin.Default()
 
-func MethodThatTakesInterface(thing Thing) {
-	fmt.Println(fmt.Sprintf("%s %+v", thing.AMethod("value"), thing))
-}
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "hillary",
+		})
+	})
 
-func UseMultiplyAndReturn() int {
-	result := multiplyAndReturn(2)
+	r.GET("/hillary/:person", func(c *gin.Context) {
+		person := c.Param("person")
+		found := false
+		for _, v := range db.People {
+			if v.Person == person {
+				found = true
+				c.JSON(200, v)
+			}
+		}
+		if !found {
+			c.JSON(404, "Nothing found")
+		}
+	})
 
-	return result * 4
-}
+	r.GET("/people", func(c *gin.Context) {
+		c.JSON(200, db.People)
+	})
 
-func multiplyAndReturn(number int) int {
-	var multiplier int
-	multiplier = 2
-	var newValue int
-	newValue = number * multiplier
-	return newValue
+	r.PUT("/person/create", func(c *gin.Context) {
+		var person Thing
+		c.BindJSON(&person)
+		fmt.Println(person.Person)
+		c.JSON(201, person)
+	})
+
+	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
