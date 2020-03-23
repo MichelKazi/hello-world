@@ -1,7 +1,6 @@
 version: "3"
 services:
   app:
-    container_name: full_app
     build: .
     ports: 
       - 8080:8080 
@@ -9,16 +8,16 @@ services:
     volumes:
       - api:/usr/src/app/
     depends_on:
-      - fullstack-postgres          # Uncomment this when using postgres.
+      - fullstack-postgres
     networks:
       - fullstack
   fullstack-postgres:
     image: "postgres:11"
-    container_name: "my_postgres"
     ports:
       - "5432:5432"
     volumes:
       - my_dbdata:/var/lib/postgresql/data
+      - ./.sql:/docker-entrypoint-initdb.d/
     networks:
       - fullstack
 volumes:
