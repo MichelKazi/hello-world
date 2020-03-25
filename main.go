@@ -19,6 +19,27 @@ type Database struct {
 	People []Thing
 }
 
+type Person struct {
+	Name *string
+	Age  *int
+}
+
+func (a *Person) SetName(realName *string) {
+	a.Name = realName
+}
+
+func (a *Person) GetName() *string {
+	return a.Name
+}
+
+func (a *Person) SetAge(realAge *int) {
+	a.Age = realAge
+}
+
+func (a *Person) GetAge() *int {
+	return a.Age
+}
+
 const (
 	host     = "fullstack-postgres"
 	port     = 5432
@@ -44,17 +65,27 @@ func main() {
 
 	r := gin.Default()
 
+	person := Person{}
+	hillary := "Hillary"
+	agetwentyseven := 27
+	person.SetName(&hillary)
+	person.SetAge(&agetwentyseven)
+
+	hillary = "Phil"
+
 	r.GET("/ping", func(c *gin.Context) {
+
 		c.JSON(200, gin.H{
-			"message": "hillary",
+			"name": person.GetName(),
+			"age":  person.GetAge(),
 		})
 	})
 
 	r.GET("/hillary/:person", func(c *gin.Context) {
-		person := c.Param("person")
+		param := c.Param("person")
 		found := false
 		for _, v := range data.People {
-			if v.Person == person {
+			if v.Person == param {
 				found = true
 				c.JSON(200, v)
 			}
@@ -66,15 +97,15 @@ func main() {
 
 	r.GET("/people/:name", func(c *gin.Context) {
 		name := c.Param("name")
-		person := getPerson(name, db)
-		c.JSON(200, person)
+		param := getPerson(name, db)
+		c.JSON(200, param)
 	})
 
 	r.PUT("/person/create", func(c *gin.Context) {
-		var person Thing
-		c.BindJSON(&person)
-		putPerson(person, db)
-		c.JSON(201, person)
+		var newPerson Thing
+		c.BindJSON(&newPerson)
+		putPerson(newPerson, db)
+		c.JSON(201, newPerson)
 	})
 
 	r.DELETE("/person/:name", func(c *gin.Context) {
