@@ -9,29 +9,35 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// Thing is a struct that holds fields for a person, their age, and favorite food
 type Thing struct {
 	Person       string
 	Age          int
 	FavoriteFood string
 }
 
+// Database is a struct containing a slice of people
 type Database struct {
 	People []Thing
 }
 
+// Person is a struct composed of a peron's name and age
 type Person struct {
 	Name string
 	Age  int
 }
 
+// GetName returns the name of a Person object
 func (p Person) GetName() string {
 	return p.Name
 }
 
+// SetName takes a string and sets that as the name of a Person object
 func (p *Person) SetName(realName string) {
 	p.Name = fmt.Sprintf("%s - Age", realName)
 }
 
+// GetAge returns the age of a Person object
 func (p Person) GetAge() int {
 	return p.Age
 }
@@ -87,7 +93,7 @@ func main() {
 		}
 	})
 
-	r.GET("/people/:name", func(c *gin.Context) {
+	r.GET("/person/:name", func(c *gin.Context) {
 		name := c.Param("name")
 		param := getPerson(name, db)
 		c.JSON(200, param)
@@ -123,6 +129,7 @@ func putPerson(person Thing, db *sql.DB) {
 func getPerson(name string, db *sql.DB) (person Thing) {
 	row := db.QueryRow(`SELECT Age, Person, FavoriteFood FROM helloworld.person WHERE Person = $1`, name)
 	err := row.Scan(&person.Age, &person.Person, &person.FavoriteFood)
+	fmt.Println(row)
 
 	switch err {
 	case sql.ErrNoRows:

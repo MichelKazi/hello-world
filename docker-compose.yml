@@ -12,6 +12,8 @@ services:
     networks:
       - fullstack
   fullstack-postgres:
+    environment:
+      POSTGRES_PASSWORD: admin123
     image: "postgres:11"
     ports:
       - "5432:5432"
