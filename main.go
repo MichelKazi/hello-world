@@ -20,24 +20,20 @@ type Database struct {
 }
 
 type Person struct {
-	Name *string
-	Age  *int
+	Name string
+	Age  int
 }
 
-func (a *Person) SetName(realName *string) {
-	a.Name = realName
+func (p Person) GetName() string {
+	return p.Name
 }
 
-func (a *Person) GetName() *string {
-	return a.Name
+func (p *Person) SetName(realName string) {
+	p.Name = fmt.Sprintf("%s - Age", realName)
 }
 
-func (a *Person) SetAge(realAge *int) {
-	a.Age = realAge
-}
-
-func (a *Person) GetAge() *int {
-	return a.Age
+func (p Person) GetAge() int {
+	return p.Age
 }
 
 const (
@@ -66,15 +62,11 @@ func main() {
 	r := gin.Default()
 
 	person := Person{}
-	hillary := "Hillary"
-	agetwentyseven := 27
-	person.SetName(&hillary)
-	person.SetAge(&agetwentyseven)
-
-	hillary = "Phil"
+	person.Name = "hillary"
+	person.Age = 27
+	person.SetName("Phil")
 
 	r.GET("/ping", func(c *gin.Context) {
-
 		c.JSON(200, gin.H{
 			"name": person.GetName(),
 			"age":  person.GetAge(),
