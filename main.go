@@ -116,6 +116,20 @@ func main() {
 		}
 	})
 
+	r.PATCH("/person/update/:name", func(c *gin.Context) {
+		var newNamePerson Thing
+		c.BindJSON(&newNamePerson)
+		name := c.Param("name")
+		//newName := c.Param("newName")
+		newName := newNamePerson.Person
+
+		patchPersonName(name, newName, db)
+
+		param := getPerson(newName, db)
+
+		c.JSON(204, param)
+	})
+
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
 
@@ -147,4 +161,11 @@ func deletePerson(name string, db *sql.DB) bool {
 		return false
 	}
 	return true
+}
+
+func patchPersonName(name string, newName string, db *sql.DB) {
+	_, err := db.Exec(`UPDATE helloworld.person SET Person = $1 WHERE Person = $2`, newName, name)
+	if err != nil {
+		panic(err)
+	}
 }
