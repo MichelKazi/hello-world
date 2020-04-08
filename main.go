@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
@@ -11,9 +12,9 @@ import (
 
 // Thing is a struct that holds fields for a person, their age, and favorite food
 type Thing struct {
-	Person       string
-	Age          int
-	FavoriteFood string
+	Person       string `json:"Person"`
+	Age          int    `json:"Age"`
+	FavoriteFood string `json:"FavoriteFood"`
 }
 
 // Database is a struct containing a slice of people
@@ -117,17 +118,19 @@ func main() {
 	})
 
 	r.PATCH("/person/update/:name", func(c *gin.Context) {
-		var newNamePerson Thing
-		c.BindJSON(&newNamePerson)
+		//var newNamePerson Thing
+
 		name := c.Param("name")
-		//newName := c.Param("newName")
-		newName := newNamePerson.Person
+		//c.BindJSON(&newNamePerson)
+		//newName := newNamePerson.Person
+
+		newName := c.PostForm("Person")
 
 		patchPersonName(name, newName, db)
 
 		param := getPerson(newName, db)
 
-		c.JSON(204, param)
+		c.JSON(http.StatusOK, param)
 	})
 
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
