@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
@@ -15,32 +17,6 @@ type Thing struct {
 	Person       string
 	Age          int
 	FavoriteFood string
-}
-
-// Database is a struct containing a slice of people
-type Database struct {
-	People []Thing
-}
-
-// Person is a struct composed of a peron's name and age
-type Person struct {
-	Name string
-	Age  int
-}
-
-// GetName returns the name of a Person object
-func (p Person) GetName() string {
-	return p.Name
-}
-
-// SetName takes a string and sets that as the name of a Person object
-func (p *Person) SetName(realName string) {
-	p.Name = fmt.Sprintf("%s - Age", realName)
-}
-
-// GetAge returns the age of a Person object
-func (p Person) GetAge() int {
-	return p.Age
 }
 
 const (
@@ -61,37 +37,18 @@ func main() {
 	log.Printf("Postgres started at %d PORT", port)
 	defer db.Close()
 
-	data := Database{}
-	data.People = append(data.People, Thing{Person: "Hillary", Age: 27, FavoriteFood: "Toads"})
-	data.People = append(data.People, Thing{Person: "Jeffry", Age: 37, FavoriteFood: "Snickers"})
-	data.People = append(data.People, Thing{Person: "Tyler", Age: 25, FavoriteFood: "Flies"})
-
 	r := gin.Default()
-
-	person := Person{}
-	person.Name = "hillary"
-	person.Age = 27
-	person.SetName("Phil")
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"PUT", "PATCH", "DELETE", "GET"},
+		AllowHeaders:     []string{"Origin"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"name": person.GetName(),
-			"age":  person.GetAge(),
-		})
-	})
-
-	r.GET("/hillary/:person", func(c *gin.Context) {
-		param := c.Param("person")
-		found := false
-		for _, v := range data.People {
-			if v.Person == param {
-				found = true
-				c.JSON(200, v)
-			}
-		}
-		if !found {
-			c.JSON(404, gin.H{"Error": "Nothing found"})
-		}
+		c.JSON(200, gin.H{"message": "pong"})
 	})
 
 	r.GET("/person/:name", func(c *gin.Context) {
@@ -117,13 +74,9 @@ func main() {
 		}
 	})
 
-	r.PATCH("/person/update/:name", func(c *gin.Context) {
-		name := c.Param("name")
-		newName := c.PostForm("Person")
-		patchPersonName(name, newName, db)
-		param := getPerson(newName, db)
-
-		c.JSON(http.StatusOK, param)
+	r.GET("/persons/list", func(c *gin.Context) {
+		persons := getPersons(db)
+		c.JSON(http.StatusOK, persons)
 	})
 
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
@@ -139,7 +92,6 @@ func putPerson(person Thing, db *sql.DB) {
 func getPerson(name string, db *sql.DB) (person Thing) {
 	row := db.QueryRow(`SELECT Age, Person, FavoriteFood FROM helloworld.person WHERE Person = $1`, name)
 	err := row.Scan(&person.Age, &person.Person, &person.FavoriteFood)
-	fmt.Println(row)
 
 	switch err {
 	case sql.ErrNoRows:
@@ -151,17 +103,34 @@ func getPerson(name string, db *sql.DB) (person Thing) {
 	}
 }
 
+func getPersons(db *sql.DB) (persons []Thing) {
+	rows, err := db.Query(`SELECT Age, Person, FavoriteFood FROM helloworld.person`)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var person Thing
+		err := rows.Scan(&person.Age, &person.Person, &person.FavoriteFood)
+		if err != nil {
+			log.Fatal(err)
+		}
+		persons = append(persons, person)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return
+}
+
 func deletePerson(name string, db *sql.DB) bool {
 	_, err := db.Exec(`DELETE FROM helloworld.person WHERE person.Person = $1`, name)
 	if err != nil {
 		return false
 	}
 	return true
-}
-
-func patchPersonName(name string, newName string, db *sql.DB) {
-	_, err := db.Exec(`UPDATE helloworld.person SET Person = $1 WHERE Person = $2`, newName, name)
-	if err != nil {
-		panic(err)
-	}
 }

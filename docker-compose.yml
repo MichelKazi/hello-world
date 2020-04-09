@@ -6,7 +6,7 @@ services:
       - 8080:8080 
     restart: on-failure
     volumes:
-      - api:/usr/src/app/
+      - .:/usr/src/app/
     depends_on:
       - fullstack-postgres
     networks:
@@ -24,7 +24,6 @@ services:
       - fullstack
 volumes:
   my_dbdata:
-  api:
 
 networks:
   fullstack:
