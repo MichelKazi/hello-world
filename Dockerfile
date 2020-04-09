@@ -1,15 +1,37 @@
-FROM golang:1.14
+FROM golang:alpine as builder
 
-WORKDIR /usr/src/app
+# ENV GO111MODULE=on
 
-copy go.mod go.sum ./
+# Install git.
+# Git is required for fetching the dependencies.
+RUN apk update && apk add --no-cache git
 
-run go mod download
+# Set the current working directory inside the container 
+WORKDIR /app
 
-copy . .
+# Copy go mod and sum files 
+COPY go.mod go.sum ./
 
-run CGO_ENABLE=0 GOOS=linux go build
+# Download all dependencies. Dependencies will be cached if the go.mod and the go.sum files are not changed 
+RUN go mod download 
 
-CMD go get github.com/cosmtrek/air && air
+# Copy the source from the current directory to the working Directory inside the container 
+COPY . .
 
+# Build the Go app
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o hello-world .
+
+# Start a new stage from scratch
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /root/
+
+# Copy the Pre-built binary file from the previous stage. Observe we also copied the .env file
+COPY --from=builder /app/hello-world .      
+
+# Expose port 8080 to the outside world
 EXPOSE 8080
+
+#Command to run the executable
+CMD ["./hello-world"]
