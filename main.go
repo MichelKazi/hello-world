@@ -74,6 +74,10 @@ func main() {
 		}
 	})
 
+	r.PATCH("/person/:name", func(c *gin.Context) {
+		c.JSON(http.StatusNoContent, gin.H{"status": "not implemented"})
+	})
+
 	r.GET("/persons/list", func(c *gin.Context) {
 		persons := getPersons(db)
 		c.JSON(http.StatusOK, persons)
