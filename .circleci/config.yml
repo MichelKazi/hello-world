@@ -1,0 +1,11 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.14.1
+    working_directory: ~/hello-world
+    steps:
+      - checkout
+      - run: go mod download
+      - run: go build
+      - run: go test -v ./...
