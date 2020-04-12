@@ -86,6 +86,10 @@ func main() {
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
 
+func Subtract(x, y int) int {
+	return x - y
+}
+
 func putPerson(person Thing, db *sql.DB) {
 	_, err := db.Exec(`INSERT into helloworld.person (Person, Age, FavoriteFood) VALUES ($1, $2, $3)`, person.Person, person.Age, person.FavoriteFood)
 	if err != nil {
